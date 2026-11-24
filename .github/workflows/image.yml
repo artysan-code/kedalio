@@ -30,6 +30,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # the whole history and its tags: a dev build's version is `git describe` of the commit
+          fetch-depth: 0
 
       # The image name must be lower case; the owner's login may not be.
       - name: tags
@@ -41,7 +43,13 @@ jobs:
         run: |
           image="ghcr.io/${OWNER,,}/kedalio-core"
           if [[ "$REF" == refs/heads/dev ]]; then
-            version="dev-${GITHUB_SHA::7}"
+            # <last release>-<commits since>-g<sha>, e.g. 1.0.0-2-g27fd585, the v stripped; with no release tag
+            # reachable (a fork, a shallow history) 0.0.0-<sha7>, which still sorts below every release
+            if described=$(git describe --tags --match 'v[0-9]*' --long 2>/dev/null); then
+              version="${described#v}"
+            else
+              version="0.0.0-${GITHUB_SHA::7}"
+            fi
             tags="$image:dev,$image:sha-${GITHUB_SHA::7}"
           elif [[ "$REF" == refs/tags/v* ]]; then
             version="${REF_NAME#v}"
