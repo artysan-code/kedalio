@@ -15,7 +15,8 @@ both, together with the Go modules.
 
 - **ci**: one job on `ubuntu-latest`, Go from `go.mod`, Deno 2.9.7, shellcheck and gitleaks as sha256-checked release
   tarballs. One run per ref, a newer push cancels the older.
-- **image**: tags `:dev` and `:sha-<short>` for `dev`; `:X.Y.Z`, `:X.Y` and `:latest` for a tag `vX.Y.Z` (a prerelease
+- **image**: tags `:dev` and `:sha-<short>` for `dev`, built as version `<last release>-<commits since>-g<sha>`
+  (`git describe`, the `v` stripped, e.g. `1.0.0-2-g27fd585`; `0.0.0-<sha7>` when no release tag is reachable); `:X.Y.Z`, `:X.Y` and `:latest` for a tag `vX.Y.Z` (a prerelease
   tag, `vX.Y.Z-rc.1`, gets only its own). Labels: source (the repository's URL), revision, version, license
   (AGPL-3.0-or-later), title. `kedalio-core -version` prints the same version. The first push creates the package
   private: make it public once (Packages › kedalio-core › Package settings › Change visibility), or Coolify needs a
@@ -26,8 +27,10 @@ both, together with the Go modules.
   installer) and `SHA256SUMS`.
   A tag fails when `.claude-plugin/marketplace.json` exists and a version in it differs from the tag.
   `kedalio-recall-eval` is a development tool and is not shipped. The notes are the tag's section of `CHANGELOG.md`
-  (the heading starts with the version, `## 1.2.0 …` or `## [1.2.0] …`), else GitHub's generated notes. A tag with a
-  `-` in it is a prerelease. To release: `git tag v1.2.0 && git push origin v1.2.0` on a green commit.
+  (the heading starts with the version, `## 1.2.0 …` or `## [1.2.0] …`). A tag without one fails the release; only a
+  prerelease (a `-` in the tag) falls back to GitHub's generated notes. To release: `deno run --allow-read --allow-write
+  scripts/release.ts 1.2.0` (turns `## Unreleased` into `## 1.2.0 (date)`, sets the plugin versions), commit that to
+  `dev`, then `git tag v1.2.0 && git push origin v1.2.0` on the green commit.
 
 ## Secrets
 
@@ -45,5 +48,5 @@ Secrets are read from the environment and are never printed.
 - Environments: `development` (used by `deploy.yml`; deployment branches `dev` only; the Coolify secrets above) and
   `release` (used by the job of `release.yml` that publishes the GitHub Release; deployment refs: tags `v*` only).
   `image.yml` uses none.
-- Release: tag a green `dev` commit `vX.Y.Z` and push the tag. When `release.yml` and the tag's image are green,
+- Release: run `scripts/release.ts X.Y.Z` and commit it, then tag the green `dev` commit `vX.Y.Z` and push the tag. When `release.yml` and the tag's image are green,
   fast-forward `main` to it: `git push origin vX.Y.Z^{commit}:refs/heads/main`. No workflow pushes `main`.

@@ -20,6 +20,7 @@ SQLite; Deno + TypeScript only for `scripts/`. English in code, commits and docs
   image `kedalio-core:dev` is built from it on every green push. A parallel agent or a risky change (migrations,
   sign-in, protocol) goes on a branch first and merges by fast-forward at green CI.
 - No deploy by hand; the deployment is CI's. Migrations never drop, rename or retype anything (see below).
+- A user-visible change adds a line under `## Unreleased` in `CHANGELOG.md` in the same commit.
 - Dependencies: standard library first, pinned in `go.mod`, a new one needs its reason in the commit body.
 
 `main` is the default branch and always points at the latest release; `dev` is development. A release is a tag on a green

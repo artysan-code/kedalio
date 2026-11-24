@@ -32,7 +32,9 @@ builds the image and redeploys the instance (ci.yml: gate, then images, then dep
 
 Only when the owner asks. `main` is the default branch and always the latest release; `dev` is development.
 
-1. Tag a green `dev` commit and push the tag: `git tag vX.Y.Z <sha> && git push origin vX.Y.Z` (CHANGELOG heading dated).
+0. Run `deno run --allow-read --allow-write scripts/release.ts X.Y.Z` (Unreleased becomes the dated heading, the plugin
+   versions follow), commit it to `dev` and wait for green CI; a tag without its CHANGELOG section fails the release.
+1. Tag that green `dev` commit and push the tag: `git tag vX.Y.Z <sha> && git push origin vX.Y.Z`.
 2. Wait for `release.yml` and the tag's image run to be green (`gh run watch <id> --exit-status`).
 3. Fast-forward `main` to the tag: `git push origin vX.Y.Z^{commit}:refs/heads/main`. No workflow pushes `main`.
 

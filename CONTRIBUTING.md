@@ -26,6 +26,8 @@ and a bug fix gets the test that would have caught it.
   version.
 - Nothing personal in the tree: no names, hostnames, e-mails or home paths; examples use `example.com` and `alice`.
 - Secrets never go in a file, an argument, a fixture or a log.
+- A user-visible change adds a line under `## Unreleased` in `CHANGELOG.md` in the same commit. Versions are SemVer
+  (X.Y.Z: X breaks users, Y adds, Z fixes); the maintainer cuts a release with `scripts/release.ts`.
 - Comments say why. Standard library first; a new dependency needs its reason in the commit body.
 - Enable the hooks with `git config core.hooksPath .githooks`.
 
