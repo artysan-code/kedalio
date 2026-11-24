@@ -6,7 +6,7 @@
 # Images pinned by digest: a tag can be moved, a digest cannot (refresh the tag and the digest together).
 
 # the build stage runs on the builder's own architecture and cross-compiles (no emulated compiler for a multi-arch image)
-FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine@sha256:d200d2dd76b03a99b52651fd1325aff7dcd35422c35c01bac56571b0507f3deb AS build
+FROM --platform=$BUILDPLATFORM golang:1.27.4-alpine@sha256:70bd7ddea8b6cbe5d6943cde279d6b67feb10cc924fb9100d1d8757c1575b280 AS build
 WORKDIR /src
 ENV CGO_ENABLED=0 GOFLAGS=-trimpath
 # the module cache first, so a change to the code does not fetch the dependencies again
