@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# pre-commit — enabled once per clone with `git config core.hooksPath .githooks`.
+#
+#   1. engine credentials and env files never enter the repository: only the staged files are looked at
+#   2. secret patterns in the staged lines
+#   3. nothing personal in the staged lines: a real home path, an e-mail address (scripts/personal.ts)
+#   4. the quick check (scripts/ci.sh --quick: format, lint, types, commit subjects; the full gate is CI's) when a file that can break it is staged
+#
+# Deliberate bypass: `git commit --no-verify`.
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+fail=0
+red() {
+  printf '\033[31m✗ %s\033[0m\n' "$*"
+  fail=1
+}
+
+while IFS= read -r f; do
+  case "$f" in
+    *.credentials.json | *.claude.json | */auth.json | .env | .env.* | */.env | */.env.* | *host-token*)
+      red "credential or env file staged: $f"
+      ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACMR)
+
+PAT='sk-ant-[A-Za-z0-9_-]{10,}|sk-[A-Za-z0-9]{32,}|"(accessToken|refreshToken|oauthAccount|api[_-]?key|apiKey|token)"\s*:\s*"[^"]{8,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}'
+while IFS= read -r line; do
+  [[ "${line%%:*}" == .githooks/* ]] && continue
+  red "possible secret staged: $line"
+done < <(git diff --cached -U0 --diff-filter=ACMR | awk '/^\+\+\+ b\//{f=substr($0,7)} /^\+[^+]/{print f": "substr($0,2)}' | grep -E "$PAT" | cut -c1-160)
+
+deno run --quiet --allow-read --allow-run=git scripts/personal.ts >&2 || fail=1
+
+((fail)) && {
+  echo "commit blocked by the pre-commit hook (bypass: git commit --no-verify)" >&2
+  exit 1
+}
+
+if git diff --cached --name-only | grep -qE '\.(ts|json|sh|toml)$|^\.githooks/|^scripts/'; then
+  nice -n 10 bash scripts/ci.sh --quick || {
+    echo "commit blocked: the quick check failed (bypass: git commit --no-verify)" >&2
+    exit 1
+  }
+fi
+exit 0

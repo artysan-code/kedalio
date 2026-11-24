@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# pre-push — only what CI cannot say after the fact: the subjects of the commits about to leave (a rejected subject
+# cannot be fixed once pushed) and a secret in them (CI's gitleaks finds it only once it is on the forge, and a
+# pushed commit keeps it in history). The gate itself runs in CI. Deliberate bypass: `git push --no-verify`.
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+deno run --quiet --allow-read --allow-run=git scripts/commits.ts || {
+  echo "push blocked: a commit subject is not a Conventional Commit (bypass: git push --no-verify)" >&2
+  exit 1
+}
+
+# the commits about to leave, scanned with CI's own rules; skipped where gitleaks is not installed (CI requires it)
+mapfile -t refs
+if command -v gitleaks >/dev/null; then
+  for r in "${refs[@]}"; do
+    read -r _ sha _ _ <<<"$r"
+    [[ "$sha" =~ ^0+$ ]] && continue
+    gitleaks git --no-banner --redact --config .gitleaks.toml --log-opts="$sha --not --remotes" . >&2 || {
+      echo "push blocked: gitleaks found a secret in the commits about to leave (bypass: git push --no-verify)" >&2
+      exit 1
+    }
+  done
+fi

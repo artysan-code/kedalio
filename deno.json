@@ -1,0 +1,25 @@
+{
+  "imports": {
+    "@std/assert": "jsr:@std/assert@1"
+  },
+  "tasks": {
+    "check": "bash scripts/check.sh",
+    "test": "bash scripts/test.sh",
+    "ci": "bash scripts/ci.sh"
+  },
+  "fmt": {
+    "lineWidth": 120,
+    "proseWrap": "preserve",
+    "exclude": [
+      ".archive/",
+      ".claude/",
+      "LICENSE"
+    ]
+  },
+  "lint": {
+    "exclude": [
+      ".archive/",
+      ".claude/"
+    ]
+  }
+}

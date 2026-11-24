@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # Actions are pinned by commit SHA with the version in a comment; Dependabot moves both.
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "ci"
+  - package-ecosystem: gomod
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "build"
+  - package-ecosystem: docker
+    directory: /core/image
+    target-branch: dev
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "build"
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "build"
+  - package-ecosystem: docker-compose
+    directory: /deploy/coolify
+    target-branch: dev
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "build"

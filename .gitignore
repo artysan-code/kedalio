@@ -1,0 +1,17 @@
+# Caches and builds: never in the repository
+node_modules/
+dist/
+coverage/
+__pycache__/
+*.pyc
+.DS_Store
+*.sync-conflict-*
+.env
+.env.*
+
+# Claude Code worktrees of parallel sessions and agents, and their reports
+/.claude/worktrees/
+/.claude/reports/
+
+# what go build leaves in the folder of the command
+/core/cmd/kedalio-core/kedalio-core
