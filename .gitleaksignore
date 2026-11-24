@@ -1,0 +1,3 @@
+# Findings gitleaks may skip: <commit>:<file>:<rule>:<line>, each with the reason. Empty on purpose: the history this
+# file once covered is not part of the repository, and the tree has no finding. A fingerprint names a commit, so a
+# finding in the tree goes into .gitleaks.toml (path and regex), which does not depend on a commit.

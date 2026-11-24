@@ -1,0 +1,3 @@
+// Package protocol holds the arguments of the Kedalio MCP tools (tools.go): the contract the connector's clients and the
+// skills written for them rely on. A change to a tool's name or arguments is announced as feat(protocol): …
+package protocol

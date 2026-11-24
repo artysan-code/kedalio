@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "kedalio": {
+      "type": "http",
+      "url": "${KEDALIO_URL}/mcp",
+      "headers": { "Authorization": "Bearer ${KEDALIO_UPKEEP_TOKEN}" }
+    }
+  }
+}

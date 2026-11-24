@@ -1,0 +1,54 @@
+# Kedalio on any machine with Docker Compose.
+#
+#   1. echo "KEDALIO_CORE_TOKEN=$(openssl rand -hex 32)" > .env     (the file stays on this machine, never in git)
+#   2. docker compose up -d
+#   3. docker compose exec core cat /data/core/first-run.txt         (copy the recovery code out, then delete it)
+#
+# From a clone, to build the image instead of pulling it: docker compose up --build -d
+# KEDALIO_IMAGE picks another image (a tag, or your own build); KEDALIO_PORT another port on this machine.
+services:
+  core:
+    image: ${KEDALIO_IMAGE:-ghcr.io/artysan-code/kedalio-core:latest} # the release asset has the tag pinned here
+    build:
+      context: .
+      dockerfile: core/image/Dockerfile
+    restart: unless-stopped
+    environment:
+      # the connector's bearer token, at least 32 characters; the core does not start without it
+      - KEDALIO_CORE_TOKEN=${KEDALIO_CORE_TOKEN:?set KEDALIO_CORE_TOKEN in .env (openssl rand -hex 32)}
+      # the https origin the core is reached at; set it to turn sign-in with a passkey (OAuth) on, for claude.ai and
+      # other remote clients. Empty: the bearer token only.
+      # (uncomment it behind a reverse proxy or tunnel; an empty value is the same as none)
+      # - KEDALIO_CORE_PUBLIC_URL=${KEDALIO_CORE_PUBLIC_URL:-}
+      # language and time zone are fixed when the database is made (English, and TZ, when empty)
+      - KEDALIO_CORE_LANGUAGE=${KEDALIO_CORE_LANGUAGE:-}
+      - TZ=${TZ:-UTC}
+      # behind a reverse proxy or tunnel: the header that carries the client's address, and the proxies' addresses
+      # - KEDALIO_CORE_CLIENT_IP_HEADER=${KEDALIO_CORE_CLIENT_IP_HEADER:-}
+      # - KEDALIO_CORE_TRUSTED_PROXIES=${KEDALIO_CORE_TRUSTED_PROXIES:-}
+      # encrypted copies of the database, on the same volume (they guard against a mistake, not a lost disk)
+      - KEDALIO_CORE_BACKUP_DIR=/data/backups
+    # Bound to this machine only. To reach it from elsewhere, keep this line and put a tunnel (cloudflared, Tailscale
+    # Funnel) or a reverse proxy with TLS in front; never publish port 8787 to the internet as plain http.
+    ports:
+      - "127.0.0.1:${KEDALIO_PORT:-8787}:8787"
+    # the process writes only to /data (the volume); everything else is read-only and has no privileges
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - core-data:/data
+    healthcheck:
+      # /health answers {"status":"ok"}, or {"status":"locked"} (still 200) while it waits for the recovery code
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8787/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+volumes:
+  core-data:

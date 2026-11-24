@@ -1,0 +1,150 @@
+# A release: a push of a tag v<X.Y.Z> (v<X.Y.Z>-<pre> is a prerelease) tests the tag, builds the user-facing binaries
+# for linux, macOS and windows on amd64 and arm64, and publishes them as a GitHub Release with a SHA256SUMS file, the
+# compose.yaml with the image pinned to the tag, get.sh (the one-line installer) and docs/install.md when the tag has
+# it. Asset names carry no version (kedalio-<os>-<arch>), so a «latest/download» link stays the same from release to release.
+# image.yml builds the container image from the same tag.
+#
+# Binaries: kedalio-core (the connector) and kedalio-restore (restores a backup). kedalio-recall-eval is a development
+# tool and is not shipped. Static (CGO_ENABLED=0, the SQLite driver is pure Go), `-trimpath`, symbols stripped, the
+# version set with -X main.version (`kedalio-core -version`). Notes: the tag's section of CHANGELOG.md when it has
+# one, else the commits since the previous tag (GitHub's generated notes). No goreleaser: a matrix and `gh` are all
+# it takes, and nothing is added to go.mod.
+name: release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # vtest or v2 publish nothing (the same check as image.yml's)
+      - name: tag format
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          if [[ ! "${TAG#v}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ || "$TAG" != v* ]]; then
+            echo "::error::$TAG is not a version tag (vX.Y.Z or vX.Y.Z-pre)"
+            exit 1
+          fi
+      # the plugin's marketplace, when the tag has one, must name the version the tag is
+      - name: marketplace version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          f=.claude-plugin/marketplace.json
+          [[ -f "$f" ]] || exit 0
+          version="${TAG#v}"
+          bad=$(jq -r --arg v "$version" '[.metadata.version?, (.plugins[]?.version?)] | map(select(. != null and . != $v)) | .[]' "$f")
+          if [[ -n "$bad" ]]; then
+            echo "::error::$f has version(s) $(tr '\n' ' ' <<<"$bad")but the tag is $TAG"
+            exit 1
+          fi
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - run: go test ./...
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: true
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - name: build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          name="kedalio-${GOOS}-${GOARCH}"
+          ext=""
+          [[ "$GOOS" == windows ]] && ext=".exe"
+          mkdir -p "dist/$name"
+          for cmd in kedalio-core kedalio-restore; do
+            go build -trimpath -tags timetzdata -ldflags="-s -w -X main.version=${version}" \
+              -o "dist/$name/$cmd$ext" "./core/cmd/$cmd"
+          done
+          cp LICENSE README.md "dist/$name/"
+          cd dist
+          if [[ "$GOOS" == windows ]]; then
+            zip -qr "$name.zip" "$name"
+          else
+            tar -czf "$name.tar.gz" "$name"
+          fi
+          rm -r "$name"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+      - name: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          # the compose file of the release runs this release's image, not «latest»
+          sed "s|\${KEDALIO_IMAGE:-ghcr.io/artysan-code/kedalio-core:latest}|\${KEDALIO_IMAGE:-ghcr.io/artysan-code/kedalio-core:${version}}|" compose.yaml >dist/compose.yaml
+          if ! grep -q "kedalio-core:${version}}" dist/compose.yaml; then
+            echo "::error::compose.yaml has no image line to pin to ${version}"
+            exit 1
+          fi
+          [[ -f docs/install.md ]] && cp docs/install.md dist/install.md
+          # the one-line installer, read by people before they run it, so the release carries the exact file
+          cp get.sh dist/get.sh
+          (cd dist && sha256sum -- * >SHA256SUMS)
+          # the CHANGELOG's section of this version: from its «## <version>» heading (a «[» before it is allowed) to the next «## »
+          awk -v v="$version" '
+            /^## / {
+              if (found) exit
+              h = substr($0, 4); sub(/^\[/, "", h)
+              if (index(h, v) == 1 && substr(h, length(v) + 1, 1) !~ /[0-9A-Za-z.-]/) found = 1
+              next
+            }
+            found { print }
+          ' CHANGELOG.md >notes.md
+          flags=(--verify-tag --title "$TAG")
+          [[ "$version" == *-* ]] && flags+=(--prerelease)
+          if [[ -s notes.md ]]; then
+            flags+=(--notes-file notes.md)
+          else
+            flags+=(--generate-notes)
+          fi
+          gh release create "$TAG" dist/* "${flags[@]}"

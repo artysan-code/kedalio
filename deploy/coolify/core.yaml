@@ -1,0 +1,110 @@
+# The Kedalio core as a Coolify resource, one example of deploying it (the generic one is compose.yaml at the root):
+# its own volume and domain. Build pack «Docker Compose», base directory `/`, this file; set in Coolify's environment
+# KEDALIO_CORE_IMAGE (an image of the core, for example ghcr.io/<owner>/kedalio-core:1.0.0) and KEDALIO_URL
+# (https://core.example.com), and give the `core` service that domain. `pull_policy: always` takes the newest image of
+# a moving tag (such as :dev) at each redeploy.
+#
+# The first start makes the instance key and writes the recovery code once to first-run.txt in the data volume (not the log): copy it out, delete the file, keep it somewhere safe. Coolify generates SERVICE_PASSWORD_64_CORETOKEN once: the connector's static bearer token,
+# kept for the first steps until OAuth (KEDALIO_URL turns it on) takes over.
+services:
+  core:
+    image: ${KEDALIO_CORE_IMAGE:?the core's image, for example ghcr.io/<owner>/kedalio-core:1.0.0}
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      # tells Coolify's proxy that the core listens on 8787 (the domain is set on the resource)
+      - SERVICE_URL_CORE_8787
+      - KEDALIO_CORE_TOKEN=${SERVICE_PASSWORD_64_CORETOKEN}
+      # the nightly upkeep's own token (writes as `upkeep`, see docs/architecture.md «Upkeep»): Coolify generates it
+      # once and gives it to the `upkeep` service below too
+      - KEDALIO_UPKEEP_TOKEN=${SERVICE_PASSWORD_64_UPKEEPTOKEN}
+      - KEDALIO_CORE_PUBLIC_URL=${KEDALIO_URL:?the core's https address}
+      # x-forwarded-for behind Traefik alone, cf-connecting-ip when only Cloudflare reaches the proxy
+      - KEDALIO_CORE_CLIENT_IP_HEADER=${KEDALIO_CLIENT_IP_HEADER:-}
+      # addresses or CIDRs of the proxies in front: the header counts only from them, and in x-forwarded-for the
+      # right-most address that is not one of them is the client
+      - KEDALIO_CORE_TRUSTED_PROXIES=${KEDALIO_TRUSTED_PROXIES:-}
+      # a word clients read beside the address (set KEDALIO_CORE_LABEL, e.g. staging): empty says nothing
+      - KEDALIO_CORE_LABEL=${KEDALIO_CORE_LABEL:-}
+      # language and time zone are a database's own, fixed when it is made (kept inside it): these two only matter for a
+      # database that does not exist yet (empty: English, and the server's zone, UTC here) and, for the zone, as an
+      # override for this run. A database made before 1.0 records what it ran with: this language (English when empty), and this zone (Europe/Rome when empty).
+      - KEDALIO_CORE_LANGUAGE=${KEDALIO_LANGUAGE:-}
+      - KEDALIO_CORE_TIMEZONE=${KEDALIO_TIMEZONE:-}
+      - KEDALIO_CORE_EMBED_URL=http://embed:8080
+      - KEDALIO_CORE_EMBED_MODEL=bge-m3-q8
+      # the folder of the encrypted copies of the database (on the volume: it guards against a mistake, the store below
+      # against a lost disk); empty: none, and then nothing is sent off the server either
+      - KEDALIO_CORE_BACKUP_DIR=${KEDALIO_CORE_BACKUP_DIR:-/data/backups}
+      # the same copies sent off the server to an S3-compatible store (Cloudflare R2: endpoint
+      # https://<account>.r2.cloudflarestorage.com, region auto); empty endpoint: none. The access key and secret are the
+      # environment variables BACKUP_S3_ACCESS_KEY and BACKUP_S3_SECRET_KEY, set in Coolify as secrets.
+      - KEDALIO_CORE_BACKUP_S3_ENDPOINT=${KEDALIO_CORE_BACKUP_S3_ENDPOINT:-}
+      - KEDALIO_CORE_BACKUP_S3_BUCKET=${KEDALIO_CORE_BACKUP_S3_BUCKET:-}
+      - KEDALIO_CORE_BACKUP_S3_REGION=${KEDALIO_CORE_BACKUP_S3_REGION:-auto}
+      - KEDALIO_CORE_BACKUP_S3_PREFIX=${KEDALIO_CORE_BACKUP_S3_PREFIX:-kedalio-core/}
+      - KEDALIO_CORE_BACKUP_S3_KEEP=${KEDALIO_CORE_BACKUP_S3_KEEP:-30}
+      - BACKUP_S3_ACCESS_KEY=${BACKUP_S3_ACCESS_KEY:-}
+      - BACKUP_S3_SECRET_KEY=${BACKUP_S3_SECRET_KEY:-}
+      # the Go runtime does not see the container's limit: below it, the collector works harder before the kernel kills
+      - GOMEMLIMIT=640MiB
+    # idle it holds ~50 MB; the cap keeps a runaway import or recall from taking the host's memory from the rest
+    mem_limit: 768m
+    volumes:
+      - core-data:/data
+
+  # the embedding model (threads and batch sizes matter: with one thread and the default batch an import crawled at a
+  # few chunks a minute and a search's query timed out)
+  embed:
+    image: ghcr.io/ggml-org/llama.cpp:server@sha256:1fa7f8f0ca663fdcf3203dc125a7e0b5c9e49c9ed054b049599666cd7e300eb0
+    restart: unless-stopped
+    command: [
+      --hf-repo,
+      gpustack/bge-m3-GGUF,
+      --hf-file,
+      bge-m3-Q8_0.gguf,
+      --embeddings,
+      --threads,
+      "${KEDALIO_EMBED_THREADS:-3}",
+      --ctx-size,
+      "4096",
+      --batch-size,
+      "2048",
+      --ubatch-size,
+      "2048",
+      --parallel,
+      "2",
+    ]
+    environment:
+      - LLAMA_CACHE=/models
+    cpus: ${KEDALIO_EMBED_THREADS:-3}
+    cpu_shares: 128
+    mem_limit: 1536m
+    volumes:
+      - embed-models:/models
+
+  # the nightly upkeep (deploy/upkeep): Claude Code with no tools of its own, talking only to the core's MCP on this
+  # network. It idles; a Coolify scheduled task on this resource runs `/upkeep/run.sh` in it once a night. Set
+  # CLAUDE_CODE_OAUTH_TOKEN in Coolify as a secret (made with `claude setup-token` on a computer signed in to the
+  # subscription), marked Literal and not available at build: left as «Interpolate», the value did not reach the
+  # container after a redeploy (seen three times, 2026-11-11). Without it the run says so and does nothing.
+  upkeep:
+    # it only idles between runs and has no health of its own: counted, it left the resource «running:unknown»
+    exclude_from_hc: true
+    build:
+      # relative to the repository: Coolify runs compose with it as the project directory
+      context: deploy/upkeep
+    restart: unless-stopped
+    environment:
+      - KEDALIO_URL=http://core:8787
+      - KEDALIO_UPKEEP_TOKEN=${SERVICE_PASSWORD_64_UPKEEPTOKEN}
+      - CLAUDE_CODE_OAUTH_TOKEN=${CLAUDE_CODE_OAUTH_TOKEN:-}
+    cpus: 1
+    mem_limit: 1g
+    volumes:
+      - upkeep-home:/home/node
+
+volumes:
+  core-data:
+  embed-models:
+  upkeep-home:

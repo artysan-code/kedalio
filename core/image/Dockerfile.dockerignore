@@ -1,0 +1,11 @@
+# The image needs the Go module and what the core imports (protocol/ and core/); everything else stays out of the
+# context, built binaries and tests included.
+*
+!go.mod
+!go.sum
+!protocol/**
+!core/**
+core/image/
+core/**/*_test.go
+core/**/testdata
+core/cmd/kedalio-core/kedalio-core
