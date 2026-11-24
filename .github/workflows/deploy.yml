@@ -1,0 +1,40 @@
+# Redeploys the owner's Coolify instance once the :dev image is pushed. ci.yml calls this file after its `image` job
+# (so only a green `dev` deploys); Actions › deploy › Run workflow, on `dev`, redeploys the head by hand (Coolify pulls
+# :dev again, deploy/coolify/core.yaml; nothing is built).
+#
+# Optional secrets of the `development` environment (Settings › Environments › development, deployment branches: `dev`
+# only; a fork gets an empty one). A reusable workflow's job with `environment:` reads the environment's secrets itself; a caller cannot pass
+# them. Without either, the job says so and succeeds, so a fork or a clone with no Coolify is not red:
+#   COOLIFY_WEBHOOK   Coolify's deploy endpoint for the core's resource (https://<coolify>/api/v1/deploy?uuid=<uuid>)
+#   COOLIFY_TOKEN     a Coolify API token with the deploy permission
+# Both go through the environment, never the command line, and are never printed.
+name: deploy
+on:
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  deploy:
+    if: ${{ github.ref == 'refs/heads/dev' }}
+    environment: development
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: deploy
+        env:
+          COOLIFY_WEBHOOK: ${{ secrets.COOLIFY_WEBHOOK }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          if [[ -z "$COOLIFY_WEBHOOK" || -z "$COOLIFY_TOKEN" ]]; then
+            echo "no COOLIFY_WEBHOOK and COOLIFY_TOKEN secrets: nothing deployed"
+            exit 0
+          fi
+          # the token goes in a header read from stdin-config, so it is in no process list
+          curl -fsS -X POST --config - "$COOLIFY_WEBHOOK" -o /dev/null <<<"header = \"Authorization: Bearer $COOLIFY_TOKEN\""
+          echo "deploy of ${GITHUB_SHA::7} requested"

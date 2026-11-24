@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# commit-msg — the subject is a Conventional Commit, `<type>(<scope>)!: <description>`, and the message carries no
+# attribution trailer (Co-Authored-By and the like): scripts/commits.ts. CI checks the subjects since the last tag. Deliberate bypass: `git commit --no-verify`.
+set -uo pipefail
+
+deno run --quiet --allow-read "$(git rev-parse --show-toplevel)/scripts/commits.ts" --message-file "$1" && exit 0
+echo "commit blocked by the commit-msg hook (bypass: git commit --no-verify)" >&2
+exit 1

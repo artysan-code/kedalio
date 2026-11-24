@@ -1,0 +1,53 @@
+{
+  "name": "kedalio",
+  "owner": { "name": "Kedalio" },
+  "metadata": { "description": "Kedalio: memory and tasks behind one MCP connector, on this computer or on a server." },
+  "plugins": [
+    {
+      "name": "kedalio-local",
+      "description": "Kedalio on this computer: memory and tasks over stdio, no token and no port.",
+      "version": "1.0.0",
+      "source": "./plugin",
+      "strict": false,
+      "skills": "./skills",
+      "userConfig": {
+        "core_path": {
+          "type": "file",
+          "title": "kedalio-core path",
+          "description": "Path of the kedalio-core binary",
+          "default": "kedalio-core"
+        },
+        "language": {
+          "type": "string",
+          "title": "Language",
+          "description": "English or Italian; used only when the database is created",
+          "default": "English"
+        }
+      },
+      "mcpServers": {
+        "kedalio": {
+          "command": "${user_config.core_path}",
+          "args": ["stdio", "-language", "${user_config.language}"]
+        }
+      }
+    },
+    {
+      "name": "kedalio-server",
+      "description": "Kedalio on a server: clients connect by approving a short code (OAuth), a passkey is optional, no token on this computer.",
+      "version": "1.0.0",
+      "source": "./plugin",
+      "strict": false,
+      "skills": "./skills",
+      "userConfig": {
+        "server_url": {
+          "type": "string",
+          "title": "Server URL",
+          "description": "MCP endpoint, for example https://kedalio.example.com/mcp"
+        }
+      },
+      "mcpServers": {
+        "kedalio": { "type": "http", "url": "${user_config.server_url}" }
+      }
+    }
+  ]
+}

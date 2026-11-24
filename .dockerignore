@@ -1,0 +1,21 @@
+# The image build needs only go.mod, go.sum, protocol/ and core/ (core/image/Dockerfile); the rest stays out of the
+# context, and so does anything secret or local.
+.git
+.github
+.githooks
+.claude
+.agents
+.env
+.env.*
+docs
+deploy
+scripts
+plugin
+.claude-plugin
+dist
+node_modules
+coverage
+*.md
+get.sh
+compose.yaml
+core/cmd/kedalio-core/kedalio-core

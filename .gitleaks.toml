@@ -1,0 +1,15 @@
+# gitleaks (v8.30) configuration: the default rules plus the engines' credential fields.
+# Run by scripts/ci.sh: `gitleaks git --config .gitleaks.toml .`
+[extend]
+useDefault = true
+
+# A Claude Code credentials file or .claude.json committed by mistake.
+[[rules]]
+id = "claude-credentials"
+description = "Claude Code OAuth credentials or account record"
+regex = '''"(accessToken|refreshToken|oauthAccount)"\s*:'''
+keywords = ["accesstoken", "refreshtoken", "oauthaccount"]
+
+[[rules.allowlists]]
+description = "the hooks that look for these fields"
+paths = ['''^\.githooks/''']
