@@ -145,7 +145,8 @@ jobs:
           ' CHANGELOG.md >notes.md
           flags=(--verify-tag --title "$TAG")
           [[ "$version" == *-* ]] && flags+=(--prerelease)
-          if [[ -s notes.md ]]; then
+          # a section of blank lines is no notes
+          if grep -q '[^[:space:]]' notes.md; then
             flags+=(--notes-file notes.md)
           elif [[ "$version" == *-* ]]; then
             # a prerelease is a trial: GitHub's notes are enough

@@ -43,7 +43,7 @@ jobs:
         run: |
           image="ghcr.io/${OWNER,,}/kedalio-core"
           if [[ "$REF" == refs/heads/dev ]]; then
-            # <last release>-<commits since>-g<sha>, e.g. 1.0.0-2-g27fd585, the v stripped; with no release tag
+            # <last release>-<commits since>-g<sha>, e.g. 1.0.0-2-g27fd5851, the v stripped; with no release tag
             # reachable (a fork, a shallow history) 0.0.0-<sha7>, which still sorts below every release
             if described=$(git describe --tags --match 'v[0-9]*' --long 2>/dev/null); then
               version="${described#v}"
@@ -55,6 +55,21 @@ jobs:
             version="${REF_NAME#v}"
             if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
               echo "::error::$REF_NAME is not a version tag (vX.Y.Z or vX.Y.Z-pre)"
+              exit 1
+            fi
+            # release.yml refuses a release with no changelog section, but it runs beside this job: check here too, so
+            # no :X.Y.Z or :latest image is pushed for a tag whose release then fails
+            if [[ "$version" != *-* ]] && ! awk -v v="$version" '
+              /^## / {
+                if (found) exit
+                h = substr($0, 4); sub(/^\[/, "", h)
+                if (index(h, v) == 1 && substr(h, length(v) + 1, 1) !~ /[0-9A-Za-z.-]/) found = 1
+                next
+              }
+              found && $0 ~ /[^[:space:]]/ { filled = 1 }
+              END { exit !filled }
+            ' CHANGELOG.md; then
+              echo "::error::CHANGELOG.md has no non-empty «## ${version}» section: run scripts/release.ts ${version}, commit, and tag again"
               exit 1
             fi
             tags="$image:$version"

@@ -16,8 +16,9 @@ both, together with the Go modules.
 - **ci**: one job on `ubuntu-latest`, Go from `go.mod`, Deno 2.9.7, shellcheck and gitleaks as sha256-checked release
   tarballs. One run per ref, a newer push cancels the older.
 - **image**: tags `:dev` and `:sha-<short>` for `dev`, built as version `<last release>-<commits since>-g<sha>`
-  (`git describe`, the `v` stripped, e.g. `1.0.0-2-g27fd585`; `0.0.0-<sha7>` when no release tag is reachable); `:X.Y.Z`, `:X.Y` and `:latest` for a tag `vX.Y.Z` (a prerelease
-  tag, `vX.Y.Z-rc.1`, gets only its own). Labels: source (the repository's URL), revision, version, license
+  (`git describe`, the `v` stripped, e.g. `1.0.0-2-g27fd5851`, the sha as git abbreviates it; `0.0.0-<sha7>` when no
+  release tag is reachable); `:X.Y.Z`, `:X.Y` and `:latest` for a tag `vX.Y.Z` (a prerelease tag, `vX.Y.Z-rc.1`, gets
+  only its own). A tag without its non-empty `CHANGELOG.md` section fails `image.yml` before anything is pushed. Labels: source (the repository's URL), revision, version, license
   (AGPL-3.0-or-later), title. `kedalio-core -version` prints the same version. The first push creates the package
   private: make it public once (Packages › kedalio-core › Package settings › Change visibility), or Coolify needs a
   registry login.
