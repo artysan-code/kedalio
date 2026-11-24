@@ -1,5 +1,5 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { compareVersions, lastRelease, prepareChangelog, setPluginVersions } from "./release.ts";
+import { compareVersions, lastRelease, localDate, prepareChangelog, setPluginVersions } from "./release.ts";
 
 const changelog = `# Changelog
 
@@ -47,6 +47,16 @@ Deno.test("refuses a version that is not X.Y.Z", () => {
 Deno.test("refuses an empty Unreleased", () => {
   const empty = changelog.replace(/## Unreleased\n[\s\S]*?(?=## 1\.0\.0)/, "## Unreleased\n\n");
   assertThrows(() => prepareChangelog(empty, "1.1.0", "2026-12-01"), Error, "empty");
+});
+
+Deno.test("refuses an Unreleased that has only empty subheadings", () => {
+  const bare = changelog.replace("- A thing.\n", "");
+  assertThrows(() => prepareChangelog(bare, "1.1.0", "2026-12-01"), Error, "empty");
+});
+
+Deno.test("dates a release with the local calendar day, not UTC's", () => {
+  assertEquals(localDate(new Date(2026, 11, 1, 0, 30)), "2026-12-01");
+  assertEquals(localDate(new Date(2026, 0, 9, 23, 59)), "2026-01-09");
 });
 
 Deno.test("refuses a changelog with no Unreleased section", () => {

@@ -36,7 +36,10 @@ export function prepareChangelog(changelog: string, version: string, date: strin
   const rest = changelog.slice(heading.index + heading[0].length);
   const next = rest.search(/^## /m);
   const body = next === -1 ? rest : rest.slice(0, next);
-  if (body.trim() === "") throw new Error("the Unreleased section is empty: nothing to release");
+  // a subheading with no entry under it is not a change
+  if (body.split("\n").every((l) => l.trim() === "" || l.startsWith("###"))) {
+    throw new Error("the Unreleased section is empty: nothing to release");
+  }
   return changelog.slice(0, heading.index + heading[0].length) + `\n## ${version} (${date})\n` + rest;
 }
 
@@ -46,6 +49,12 @@ export function setPluginVersions(json: string, version: string): string {
   if (!field.test(json)) throw new Error("the file has no version to set");
   field.lastIndex = 0;
   return json.replace(field, `$1${version}$2`);
+}
+
+/** The date as YYYY-MM-DD in the local calendar: the owner's day, not UTC's. */
+export function localDate(d: Date): string {
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
 }
 
 async function exists(path: string): Promise<boolean> {
@@ -62,7 +71,7 @@ if (import.meta.main) {
   const version = Deno.args[0] ?? "";
   try {
     const root = new URL("..", import.meta.url).pathname;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = localDate(new Date());
     // all computed before the first write, so a refusal leaves every file as it was
     const edits = new Map<string, string>();
     edits.set(`${root}CHANGELOG.md`, prepareChangelog(await Deno.readTextFile(`${root}CHANGELOG.md`), version, today));
