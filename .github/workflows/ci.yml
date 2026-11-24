@@ -78,4 +78,6 @@ jobs:
     needs: image
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
     uses: ./.github/workflows/deploy.yml
+    # the development environment's secrets reach a called workflow only through inherit
+    secrets: inherit
     permissions: {}

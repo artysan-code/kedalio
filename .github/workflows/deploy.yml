@@ -3,8 +3,9 @@
 # :dev again, deploy/coolify/core.yaml; nothing is built).
 #
 # Optional secrets of the `development` environment (Settings › Environments › development, deployment branches: `dev`
-# only; a fork gets an empty one). A reusable workflow's job with `environment:` reads the environment's secrets itself; a caller cannot pass
-# them. Without either, the job says so and succeeds, so a fork or a clone with no Coolify is not red:
+# only; a fork gets an empty one). Called from ci.yml, the job sees them only because the caller has `secrets: inherit`:
+# without it they come empty even under `environment:` (seen on 2026-11-24). Without either, the job says so and
+# succeeds, so a fork or a clone with no Coolify is not red:
 #   COOLIFY_WEBHOOK   Coolify's deploy endpoint for the core's resource (https://<coolify>/api/v1/deploy?uuid=<uuid>)
 #   COOLIFY_TOKEN     a Coolify API token with the deploy permission
 # Both go through the environment, never the command line, and are never printed.
