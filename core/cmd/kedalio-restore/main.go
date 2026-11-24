@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -80,9 +81,9 @@ func run() error {
 	}
 	// the tags are signed under a key derived from the instance key, so the recovery code is needed to check a copy; like
 	// the store's keys it comes from the environment, never from an argument
-	kek, ok := vault.KeyFromCode(os.Getenv("KEDALIO_RECOVERY_CODE"))
-	if !ok {
-		return errors.New("the environment KEDALIO_RECOVERY_CODE (the recovery code) is needed to check the copy's tag")
+	kek, err := recoveryKey(os.Getenv("KEDALIO_RECOVERY_CODE"))
+	if err != nil {
+		return err
 	}
 	key, err := vault.DatabaseKey(kek)
 	if err != nil {
@@ -98,4 +99,16 @@ func run() error {
 	fmt.Printf("%s is in %s/core.db, still encrypted. Start kedalio-core -data %s: it comes up locked; "+
 		"POST {\"code\": \"<the recovery code>\"} to /unlock.\n", got, *to, *to)
 	return nil
+}
+
+// recoveryKey tells a missing recovery code from a malformed one, so a mistyped code is not reported as absent.
+func recoveryKey(code string) ([]byte, error) {
+	if strings.TrimSpace(code) == "" {
+		return nil, errors.New("the environment KEDALIO_RECOVERY_CODE (the recovery code) is needed to check the copy's tag")
+	}
+	kek, ok := vault.KeyFromCode(code)
+	if !ok {
+		return nil, errors.New("KEDALIO_RECOVERY_CODE is not a valid recovery code: check it against the one saved at setup")
+	}
+	return kek, nil
 }
