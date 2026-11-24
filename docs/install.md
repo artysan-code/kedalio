@@ -126,7 +126,7 @@ claude plugin marketplace add artysan-code/kedalio
 claude plugin install kedalio-local@kedalio --config core_path=/home/alice/.local/bin/kedalio-core --config language=English
 ```
 
-The marketplace follows the repository's default branch, `main`, not a release tag; `main` moves only at a release, so it
+The marketplace follows the repository's default branch, `release`, not a release tag; `release` moves only at a release, so it
 gets the latest release.
 
 Use the real full path from 2.3 for `core_path` (on Windows, the full path of `kedalio-core.exe`) and the person's

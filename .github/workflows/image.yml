@@ -2,8 +2,8 @@
 # and linux/arm64. Not a gate: scripts/ci.sh is the gate.
 #
 # Two ways in, one build:
-#   - ci.yml calls this file (`workflow_call`) in a job that needs the gate, on a push to `dev`: no image of a commit
-#     exists before the gate passed on it. Tags :dev and :sha-<short>.
+#   - ci.yml calls this file (`workflow_call`) in a job that needs the gate, on a push to `development`: no image of a commit
+#     exists before the gate passed on it. Tags :development and :sha-<short>.
 #   - a push of a tag v<X.Y.Z> (see release.yml, which tests it): tags :X.Y.Z, :X.Y and :latest (a prerelease,
 #     v1.0.0-rc.1, gets only its own tag, so :latest stays a release).
 # A call from a ref that is neither pushes nothing (the check in «tags»).
@@ -30,7 +30,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          # the whole history and its tags: a dev build's version is `git describe` of the commit
+          # the whole history and its tags: a development build's version is `git describe` of the commit
           fetch-depth: 0
 
       # The image name must be lower case; the owner's login may not be.
@@ -42,7 +42,7 @@ jobs:
           REF_NAME: ${{ github.ref_name }}
         run: |
           image="ghcr.io/${OWNER,,}/kedalio-core"
-          if [[ "$REF" == refs/heads/dev ]]; then
+          if [[ "$REF" == refs/heads/development ]]; then
             # <last release>-<commits since>-g<sha>, e.g. 1.0.0-2-g27fd5851, the v stripped; with no release tag
             # reachable (a fork, a shallow history) 0.0.0-<sha7>, which still sorts below every release
             if described=$(git describe --tags --match 'v[0-9]*' --long 2>/dev/null); then
@@ -50,7 +50,7 @@ jobs:
             else
               version="0.0.0-${GITHUB_SHA::7}"
             fi
-            tags="$image:dev,$image:sha-${GITHUB_SHA::7}"
+            tags="$image:development,$image:sha-${GITHUB_SHA::7}"
           elif [[ "$REF" == refs/tags/v* ]]; then
             version="${REF_NAME#v}"
             if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
@@ -75,7 +75,7 @@ jobs:
             tags="$image:$version"
             [[ -n "${BASH_REMATCH[3]}" ]] || tags="$tags,$image:${BASH_REMATCH[1]}.${BASH_REMATCH[2]},$image:latest"
           else
-            echo "$REF is neither dev nor a version tag: nothing is pushed"
+            echo "$REF is neither development nor a version tag: nothing is pushed"
             echo "push=false" >>"$GITHUB_OUTPUT"
             exit 0
           fi
@@ -85,7 +85,7 @@ jobs:
             echo "tags=$tags"
           } >>"$GITHUB_OUTPUT"
 
-      # A tag is not gated by ci.yml: its tests run here, so a tag with failing tests publishes no image (a `dev` call
+      # A tag is not gated by ci.yml: its tests run here, so a tag with failing tests publishes no image (a `development` call
       # comes after the gate).
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         if: ${{ startsWith(github.ref, 'refs/tags/') }}

@@ -15,8 +15,8 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  # a newer push must not cancel the image push or deploy of `dev` half way
-  cancel-in-progress: ${{ github.ref != 'refs/heads/dev' }}
+  # a newer push must not cancel the image push or deploy of `development` half way
+  cancel-in-progress: ${{ github.ref != 'refs/heads/development' }}
 
 permissions:
   contents: read
@@ -64,11 +64,11 @@ jobs:
       - name: gate
         run: bash scripts/ci.sh
 
-  # The image of a green `dev` (image.yml, pushed to ghcr.io), then the owner's redeploy (deploy.yml, which does nothing
-  # without its secrets). A newer push cancels a run of any other branch, never one of `dev` (concurrency above).
+  # The image of a green `development` (image.yml, pushed to ghcr.io), then the owner's redeploy (deploy.yml, which does nothing
+  # without its secrets). A newer push cancels a run of any other branch, never one of `development` (concurrency above).
   image:
     needs: gate
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/development' }}
     uses: ./.github/workflows/image.yml
     permissions:
       contents: read
@@ -76,7 +76,7 @@ jobs:
 
   deploy:
     needs: image
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/dev' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/development' }}
     uses: ./.github/workflows/deploy.yml
     # the development environment's secrets reach a called workflow only through inherit
     secrets: inherit

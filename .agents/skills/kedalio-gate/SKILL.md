@@ -7,12 +7,12 @@ description: What Kedalio's gate (scripts/ci.sh) runs, how to set up the git hoo
 
 `scripts/ci.sh` is the whole gate; CI runs it on GitHub Actions (`.github/workflows/ci.yml`, job `gate`) on every push
 and pull request. The verdict is the run's, shown on the commit: `gh run list --branch <branch>`, `gh run watch <id>
---exit-status`, `gh run view <id> --log-failed`. On `dev`, a green gate goes on to the `image` and `deploy` jobs (docs/ci.md).
+--exit-status`, `gh run view <id> --log-failed`. On `development`, a green gate goes on to the `image` and `deploy` jobs (docs/ci.md).
 
 - **Full**: `deno fmt --check`, `deno lint`, `deno check`, shell scripts (`bash -n`, shellcheck), Conventional Commit
   subjects (`scripts/commits.ts`), nothing personal (`scripts/personal.ts`), the repository's skills
   (`scripts/skills.ts`), the tooling's tests (`scripts/test.sh`), Go's format, vet and staticcheck (`scripts/go.sh check`)
-  and tests (`go.sh test`; `go.sh vuln` on `dev`), and the secret scan (gitleaks).
+  and tests (`go.sh test`; `go.sh vuln` on `development`), and the secret scan (gitleaks).
 - `--fast`: the same without the secret scan. `--quick`: only the cheap steps (check, Go's format and vet, subjects,
   personal, skills).
 - Steps run at once, each into its own log (on a working branch in CI, steps whose inputs did not change are skipped:
@@ -28,8 +28,8 @@ and pull request. The verdict is the run's, shown on the commit: `gh run list --
 CI runners can be slow and shared, so every step has a deadline and competes with the others.
 
 - **Declare its inputs** and add it with `step_if <name> '<paths ERE>' …` in `ci.sh`: on a working branch in CI it is
-  skipped, with one line saying why, when nothing under its inputs changed since the merge-base with `origin/dev`. Be
-  conservative: follow its imports out of its folder (`deno.json`, `go.mod`); when unsure, run it. `dev`
+  skipped, with one line saying why, when nothing under its inputs changed since the merge-base with `origin/development`. Be
+  conservative: follow its imports out of its folder (`deno.json`, `go.mod`); when unsure, run it. `development`
   always runs the full gate; `check` and the whole-tree steps are never skipped.
 - **No work done twice**: type-check once, in `check` (the tests run with `--no-check` in CI); build once.
 - **Measure** the step's time in a CI run before and after, and say it in the commit body.

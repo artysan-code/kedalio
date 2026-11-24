@@ -90,7 +90,7 @@ if (import.meta.main) {
 
 Review the diff, then:
   git commit -am "chore(release): ${version}"
-  # once it is on dev and CI is green, the owner tags it:
+  # once it is on development and CI is green, the owner tags it:
   git tag v${version} && git push origin v${version}`);
   } catch (e) {
     console.error(`release: ${e instanceof Error ? e.message : e}`);

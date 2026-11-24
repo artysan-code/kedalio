@@ -204,7 +204,7 @@ approvals"); SECURITY.md Scope: approval codes are phishable by design, approve 
 phishing-resistant option; deploy/coolify/core.yaml:7 comment (first-run.txt holds only the code). A short ADR
 `docs/adr/0007-approval-codes.md` recording the trade-off (owner to confirm it wants an ADR).
 
-### 6. Step plan (branch `feat/approval-codes`, fast-forward to `dev` at green CI)
+### 6. Step plan (branch `feat/approval-codes`, fast-forward to `development` at green CI)
 
 1. **Approval store** — migration step 2, `approval.go` (code gen, normalize, Start/Show/Decide/Poll), Purge and
    pruneClients changes. Check: `go test ./core/identity/...` with table tests for normalize, state machine, expiry, cap,
@@ -226,13 +226,13 @@ phishing-resistant option; deploy/coolify/core.yaml:7 comment (first-run.txt hol
    cleaned), `setup_test.go` rewritten for the code path, WebAuthn test authenticator (`testing_authenticator_test.go`)
    creates a second passkey. _(after 2)_
 6. **Docs** — 5.7. Check: `scripts/ci.sh --quick` (doc checks), grep shows no "setup link" left outside CHANGELOG/ADR.
-7. **Real verification** (below), then fast-forward to `dev`; done = CI note `images ok, deploy requested`.
+7. **Real verification** (below), then fast-forward to `development`; done = CI note `images ok, deploy requested`.
 
 Gate at each step: `scripts/ci.sh --quick` and `go test ./...` exit codes.
 
 ### 7. Verify for real
 
-1. Start the old image (`dev` before the branch) on a fresh data folder, connect once with a passkey, stop. Start the
+1. Start the old image (`development` before the branch) on a fresh data folder, connect once with a passkey, stop. Start the
    branch image on the same folder: it migrates, the old passkey and clients still work (rule: new code on a DB the old
    code made).
 2. Branch image with `cloudflared tunnel --url http://localhost:8787` (quick tunnel) and `KEDALIO_CORE_PUBLIC_URL` set to

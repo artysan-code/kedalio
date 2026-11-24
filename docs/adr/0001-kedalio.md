@@ -121,7 +121,7 @@ another profile, judging when as it learns.
 - Agents run on the host, in isolated containers.
 - They start on request, on a schedule, and, as trust grows, on the assistant's own initiative.
 - They work on a branch of their own and open a pull request; when the task is well defined and CI is green, they
-  merge into `dev` on their own, except for the protected paths of [0003](0003-safety.md), which wait for the owner.
+  merge into `development` on their own, except for the protected paths of [0003](0003-safety.md), which wait for the owner.
 - Each run leaves a report in its task and a memory of what was done, and the assistant tells the owner.
 - **A project that needs help**: a signal (CI failing, a service down, errors in production) sends an agent to look;
   the owner gets a report with what happened and a fix.

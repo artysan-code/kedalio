@@ -1,8 +1,8 @@
-# Redeploys the owner's Coolify instance once the :dev image is pushed. ci.yml calls this file after its `image` job
-# (so only a green `dev` deploys); Actions › deploy › Run workflow, on `dev`, redeploys the head by hand (Coolify pulls
-# :dev again, deploy/coolify/core.yaml; nothing is built).
+# Redeploys the owner's Coolify instance once the :development image is pushed. ci.yml calls this file after its `image` job
+# (so only a green `development` deploys); Actions › deploy › Run workflow, on `development`, redeploys the head by hand (Coolify pulls
+# :development again, deploy/coolify/core.yaml; nothing is built).
 #
-# Optional secrets of the `development` environment (Settings › Environments › development, deployment branches: `dev`
+# Optional secrets of the `development` environment (Settings › Environments › development, deployment branches: `development`
 # only; a fork gets an empty one). Called from ci.yml, the job sees them only because the caller has `secrets: inherit`:
 # without it they come empty even under `environment:` (seen on 2026-11-24). Without either, the job says so and
 # succeeds, so a fork or a clone with no Coolify is not red:
@@ -22,7 +22,7 @@ permissions: {}
 
 jobs:
   deploy:
-    if: ${{ github.ref == 'refs/heads/dev' }}
+    if: ${{ github.ref == 'refs/heads/development' }}
     environment: development
     runs-on: ubuntu-latest
     timeout-minutes: 5

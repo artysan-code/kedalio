@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # go.sh — the Go part of the gate: `go.sh check` (format, vet, staticcheck: cheap, in --quick), `go.sh test` (the
-# tests: the full gate) or `go.sh vuln` (govulncheck: the full gate on dev). Go is optional on a workstation (skipped with a warning) and required in CI (CI=true).
+# tests: the full gate) or `go.sh vuln` (govulncheck: the full gate on development). Go is optional on a workstation (skipped with a warning) and required in CI (CI=true).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

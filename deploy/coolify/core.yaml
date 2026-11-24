@@ -2,7 +2,7 @@
 # its own volume and domain. Build pack «Docker Compose», base directory `/`, this file; set in Coolify's environment
 # KEDALIO_CORE_IMAGE (an image of the core, for example ghcr.io/<owner>/kedalio-core:1.0.0) and KEDALIO_URL
 # (https://core.example.com), and give the `core` service that domain. `pull_policy: always` takes the newest image of
-# a moving tag (such as :dev) at each redeploy.
+# a moving tag (such as :development) at each redeploy.
 #
 # The first start makes the instance key and writes the recovery code once to first-run.txt in the data volume (not
 # the log): copy it out, delete the file and keep it somewhere safe.

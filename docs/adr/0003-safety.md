@@ -38,7 +38,7 @@ The list is enforced by the core, outside the model: no prompt, skill or setting
 
 ## Protected paths
 
-An agent merges into `dev` on its own only when its task is well defined, CI is green, and its branch touches none of
+An agent merges into `development` on its own only when its task is well defined, CI is green, and its branch touches none of
 these:
 
 - CI and its workflows;
@@ -46,7 +46,7 @@ these:
 - dependencies: lockfiles and new packages;
 - the code of the vault, credentials and access.
 
-A branch that touches one opens its pull request and waits for the owner. CI always runs with `dev`'s configuration,
+A branch that touches one opens its pull request and waits for the owner. CI always runs with `development`'s configuration,
 never with the branch's own.
 
 ## Where the other defences live

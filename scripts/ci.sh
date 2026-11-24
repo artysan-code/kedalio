@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ci.sh — the whole gate, run by CI on every push of dev and of a working branch. A
+# ci.sh — the whole gate, run by CI on every push of development and of a working branch. A
 # workstation runs only --quick (the pre-commit hook); the full gate is CI's.
 #
 #   scripts/ci.sh          check, commit subjects, tests, secret scan
@@ -7,7 +7,7 @@
 #   scripts/ci.sh --quick  only the cheap steps: check (fmt, lint, type-check, shellcheck), Go's format and vet, and
 #                          commit subjects
 # The Go code (go.mod at the root) has its own steps: go_check (gofmt, vet, staticcheck) and, in the full gate, go_test
-# (tests) and, on dev, go_vuln (govulncheck), all in scripts/go.sh.
+# (tests) and, on development, go_vuln (govulncheck), all in scripts/go.sh.
 #
 # The steps are independent: they run at once, each into its own log. Each prints one line with its time as soon as
 # it ends, and a failed one its whole log (CI_VERBOSE=1: every log); the gate fails when any fails, and names it.
@@ -17,7 +17,7 @@
 # fails that branch's own run, not this one.
 # gitleaks is optional on a workstation (skipped with a warning) and required in CI (CI=true).
 # CI runners can be slow and shared, so every step has a deadline, and on a working branch in CI a step whose inputs
-# did not change since the merge-base with origin/dev is skipped, and says so. `dev` runs the full gate, and
+# did not change since the merge-base with origin/development is skipped, and says so. `development` runs the full gate, and
 # so does everything else (a workstation, no merge-base to compute).
 # check, commits, personal, placeholders and secrets are never skipped: their inputs are the whole tree (or the history).
 set -euo pipefail
@@ -60,14 +60,14 @@ step() {
   pids+=($!)
 }
 
-# Files changed since the merge-base with origin/dev, only on a CI run of a working branch; empty (so nothing is
+# Files changed since the merge-base with origin/development, only on a CI run of a working branch; empty (so nothing is
 # skipped) in every other case or when the merge-base cannot be computed.
 changed=""
 skipping=0
 if [[ "${CI:-}" == true ]]; then
   ref=${GITHUB_REF:-}
-  if [[ -n "$ref" && "$ref" != refs/heads/dev ]] &&
-    base=$(git merge-base HEAD origin/dev 2>/dev/null) && changed=$(git diff --name-only "$base" HEAD 2>/dev/null); then
+  if [[ -n "$ref" && "$ref" != refs/heads/development ]] &&
+    base=$(git merge-base HEAD origin/development 2>/dev/null) && changed=$(git diff --name-only "$base" HEAD 2>/dev/null); then
     skipping=1
   fi
 fi
@@ -79,7 +79,7 @@ step_if() {
   local name=$1 inputs=$2
   shift 2
   if ((skipping)) && ! grep -qE "^(${inputs}|deno\.(json|lock)|scripts/ci\.sh|\.github/)" <<<"$changed"; then
-    echo "ci: ${name} skipped, no change under ${inputs//|/, } since the merge-base with origin/dev"
+    echo "ci: ${name} skipped, no change under ${inputs//|/, } since the merge-base with origin/development"
     return
   fi
   step "$name" "$@"
@@ -98,8 +98,8 @@ if ((!quick)); then
   step_if test 'scripts/|get\.sh' bash scripts/test.sh
   step_if go_test '.*\.go|go\.(mod|sum)|scripts/go\.sh' bash scripts/go.sh test
   # govulncheck reads the vulnerability database over the network and a new advisory changes its answer with no change of
-  # ours, so it runs on dev only, and only a vulnerability that affects the code fails it (scripts/go.sh)
-  [[ "${CI:-}" == true && "${GITHUB_REF:-}" == refs/heads/dev ]] &&
+  # ours, so it runs on development only, and only a vulnerability that affects the code fails it (scripts/go.sh)
+  [[ "${CI:-}" == true && "${GITHUB_REF:-}" == refs/heads/development ]] &&
     step go_vuln bash scripts/go.sh vuln
   ((fast)) || step secrets secrets
 fi
