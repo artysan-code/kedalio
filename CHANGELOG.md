@@ -1,5 +1,15 @@
 # Changelog
 
+What changed for people who run Kedalio, newest first. Versions are SemVer, X.Y.Z: X breaks users, Y adds, Z fixes. A
+user-visible change adds a line under Unreleased as it lands; `scripts/release.ts` turns Unreleased into a release.
+
+## Unreleased
+
+### Fixed
+
+- `kedalio-restore` now says when `KEDALIO_RECOVERY_CODE` is set but not a valid recovery code, instead of reporting it
+  as missing.
+
 ## 1.0.0 (2026-11-24)
 
 The first public release, under the GNU Affero General Public License, version 3 or (at your option) any later version.
