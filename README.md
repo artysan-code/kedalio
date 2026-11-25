@@ -42,6 +42,11 @@ On a server with Docker Compose, run it there with `sh get.sh --server https://k
 `~/kedalio` with a new token and starts nothing until you add `--start`. It never overwrites an existing `.env` or
 `compose.yaml`. `sh get.sh --help` lists the rest.
 
+To remove the binaries, run `sh get.sh --uninstall`. It deletes `kedalio-core` and `kedalio-restore` from `~/.local/bin`
+(or `KEDALIO_BIN_DIR`) and says which of them were not there. It leaves your data folder (memory, recovery file), the
+Claude Code plugin and any `~/kedalio` server folder or Docker volume alone; see
+[docs/install.md](docs/install.md#6-remove-it) for those.
+
 To build from a clone instead, use Docker Compose with `--build`, or `go build`.
 
 ## Features
@@ -283,6 +288,10 @@ move every path.
   one rate-limit bucket, so one outsider can use up the sign-in limits for everyone. With `-client-ip-header` and no
   `-trusted-proxies`, anyone who reaches the core directly can choose the address the limits see, so the core must be
   reachable only through the proxy. Neither warning stops the start.
+- No telemetry: the core sends no usage data, crash reports or update checks, and nothing is phoned home. Its only
+  outgoing calls are the ones you turn on or ask for: copies to the S3-compatible store set with `-backup-s3-endpoint`;
+  requests to the embeddings server set with `-embed-url`; and the fetch of a web address you give when adding a
+  document to a collection (private and loopback addresses refused). With none of them in use, it makes none.
 - Reading a PDF stops at 2000 pages or 8 MiB of text; the rest is left out of the index without an error.
 
 The full model, including what backups do not protect against: [docs/architecture.md](docs/architecture.md). To report a

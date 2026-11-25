@@ -24,6 +24,14 @@ Kedalio serves one owner and the clients that owner connects. The threat model, 
 are in [docs/architecture.md](docs/architecture.md). A client that already holds the owner's bearer token, or the data folder
 with its instance key, is outside what the core defends against.
 
+## Telemetry and outgoing calls
+
+Kedalio has no telemetry: no usage data, crash reports or update checks leave the core. Its only outgoing calls are
+the S3-compatible store of the offsite backup (`-backup-s3-endpoint`, off unless set), the embeddings server
+(`-embed-url`, off unless set), and the fetch of a web address the owner or a connected client gives when adding a
+document to a collection (private and loopback addresses are refused). `get.sh` and `kedalio-restore` reach the
+release host and the backup store when you run them.
+
 ## Approval codes and phishing
 
 A new client is authorized when you approve a short code its sign-in page shows. A code is not phishing-resistant, where a

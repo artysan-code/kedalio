@@ -304,7 +304,10 @@ Finish with a short summary for the person:
 - Local, plugin: `claude plugin uninstall kedalio-local@kedalio`, and `claude plugin marketplace remove kedalio` if no
   other Kedalio plugin is installed. Direct connection: `claude mcp remove -s user kedalio`.
 - Server, plugin: `claude plugin uninstall kedalio-server@kedalio`.
-- This computer: delete `kedalio-core` and `kedalio-restore` from `~/.local/bin` (or the Windows folder). Leave the
+- This computer: `sh get.sh --uninstall` (or `curl -fsSL https://kedalio.com/get.sh | sh -s -- --uninstall`) deletes
+  `kedalio-core` and `kedalio-restore` from `~/.local/bin` (`KEDALIO_BIN_DIR`), prints which were not there and where
+  the data folder is. It does not touch the data folder, the plugin, a `~/kedalio` server folder or the Docker volume.
+  On Windows, delete the two files by hand. Leave the
   data folder in place and tell the person where it is: deleting it cannot be undone, so do it only on their explicit
   word.
 - Server: revoke this computer's sign-in with `docker compose exec core kedalio-core clients list` and

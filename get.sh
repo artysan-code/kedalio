@@ -203,6 +203,12 @@ EOF
       say "Then check it: curl -fsS $server/health"
     fi
     say "The port stays on 127.0.0.1: put your proxy or tunnel with TLS in front of it."
+    say ""
+    say "WARNING: the client-address header is off (KEDALIO_CORE_CLIENT_IP_HEADER in compose.yaml is commented out)."
+    say "Behind a reverse proxy or tunnel, every client then shares one rate-limit bucket, so one outsider can lock"
+    say "everyone out of sign-in. If you use a proxy: in $dir/compose.yaml uncomment KEDALIO_CORE_CLIENT_IP_HEADER"
+    say "(and KEDALIO_CORE_TRUSTED_PROXIES), set them in .env, then run docker compose up -d again. See the README."
+    say ""
     say "The first start writes first-run.txt (the recovery code) inside the container. Open it"
     say "yourself, in your own terminal, copy the code to a password manager, then delete the file:"
     say "  cd \"$dir\" && docker compose exec core cat /data/core/first-run.txt"

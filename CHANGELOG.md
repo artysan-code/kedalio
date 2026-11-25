@@ -5,6 +5,13 @@ user-visible change adds a line under Unreleased as it lands; `scripts/release.t
 
 ## Unreleased
 
+### Changed
+
+- `get.sh --server` now warns that the client-address header is off and says how to turn it on behind a reverse
+  proxy or tunnel; `compose.yaml` carries a commented S3 offsite backup example.
+- README and SECURITY state that Kedalio has no telemetry and list its only outgoing calls (offsite S3 backup,
+  embeddings server, fetching a document URL); `get.sh --uninstall` is documented.
+
 ### Fixed
 
 - `kedalio-restore` now says when `KEDALIO_RECOVERY_CODE` is set but not a valid recovery code, instead of reporting it

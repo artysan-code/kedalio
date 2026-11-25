@@ -28,6 +28,15 @@ services:
       # - KEDALIO_CORE_TRUSTED_PROXIES=${KEDALIO_CORE_TRUSTED_PROXIES:-}
       # encrypted copies of the database, on the same volume (they guard against a mistake, not a lost disk)
       - KEDALIO_CORE_BACKUP_DIR=/data/backups
+      # a second copy off this machine, in an S3-compatible store (Cloudflare R2, Backblaze B2, MinIO...). Uncomment all
+      # and fill in; the values below are placeholders. The two keys are secrets: put them in .env, never in this file.
+      # - KEDALIO_CORE_BACKUP_S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com
+      # - KEDALIO_CORE_BACKUP_S3_BUCKET=my-kedalio-backups
+      # - KEDALIO_CORE_BACKUP_S3_REGION=auto
+      # - KEDALIO_CORE_BACKUP_S3_PREFIX=kedalio
+      # - KEDALIO_CORE_BACKUP_S3_KEEP=30
+      # - BACKUP_S3_ACCESS_KEY=${BACKUP_S3_ACCESS_KEY:-}
+      # - BACKUP_S3_SECRET_KEY=${BACKUP_S3_SECRET_KEY:-}
     # Bound to this machine only. To reach it from elsewhere, keep this line and put a tunnel (cloudflared, Tailscale
     # Funnel) or a reverse proxy with TLS in front; never publish port 8787 to the internet as plain http.
     ports:

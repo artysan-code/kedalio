@@ -200,6 +200,9 @@ Deno.test("get.sh --server writes a private .env and the URL in compose.yaml, an
     assertStringIncludes(yaml, "      - KEDALIO_CORE_PUBLIC_URL=");
     assert(!yaml.includes("# - KEDALIO_CORE_PUBLIC_URL="));
     assertStringIncludes(r.out, "first-run.txt");
+    // the proxy header stays off, and the run says what to do behind a proxy
+    assertStringIncludes(r.out, "KEDALIO_CORE_CLIENT_IP_HEADER");
+    assertStringIncludes(r.out, "WARNING");
 
     const again = await f.get(["--server", url]);
     assert(again.code !== 0);
