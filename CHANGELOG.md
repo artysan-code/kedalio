@@ -19,6 +19,8 @@ user-visible change adds a line under Unreleased as it lands; `scripts/release.t
 
 ### Fixed
 
+- stdio mode handles the requests on one stream in the order they arrive, so a read sent right after a write sees
+  it and answers no longer come back out of order; cancellations and the client's answers still go through at once.
 - `kedalio-restore` now says when `KEDALIO_RECOVERY_CODE` is set but not a valid recovery code, instead of reporting it
   as missing.
 
