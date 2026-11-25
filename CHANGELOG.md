@@ -5,6 +5,8 @@ user-visible change adds a line under Unreleased as it lands; `scripts/release.t
 
 ## Unreleased
 
+## 1.0.2 (2026-11-25)
+
 ### Added
 
 - Kedalio is listed on the MCP registry as `io.github.artysan-code/kedalio` (`server.json`): its container image runs

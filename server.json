@@ -3,7 +3,7 @@
   "name": "io.github.artysan-code/kedalio",
   "title": "Kedalio",
   "description": "Self-hosted memory and task list for AI assistants: notes, tasks and projects in one encrypted DB.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": {
     "url": "https://github.com/artysan-code/kedalio",
     "source": "github"
@@ -12,7 +12,7 @@
   "packages": [
     {
       "registryType": "oci",
-      "identifier": "ghcr.io/artysan-code/kedalio-core:1.0.1",
+      "identifier": "ghcr.io/artysan-code/kedalio-core:1.0.2",
       "runtimeHint": "docker",
       "transport": {
         "type": "stdio"
