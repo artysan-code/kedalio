@@ -30,6 +30,9 @@ both, together with the Go modules.
   Every asset listed in `SHA256SUMS` is attested (SLSA build provenance, `actions/attest-build-provenance` on `SHA256SUMS`), and so is the image
   by digest (pushed to ghcr.io): `gh attestation verify <file> --repo artysan-code/kedalio`, or
   `gh attestation verify oci://ghcr.io/artysan-code/kedalio-core:<tag> --repo artysan-code/kedalio`.
+  The image workflow validates `server.json` on every pushed image and, for a release, publishes it to the MCP
+  registry as `io.github.artysan-code/kedalio` (version and image tag from the tag; `mcp-publisher` checked with cosign,
+  signed in with the job's OIDC token).
   `kedalio-recall-eval` is a development tool and is not shipped. The notes are the tag's section of `CHANGELOG.md`
   (the heading starts with the version, `## 1.2.0 …` or `## [1.2.0] …`). A tag without one fails the release; only a
   prerelease (a `-` in the tag) falls back to GitHub's generated notes. To release: `deno run --allow-read --allow-write

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.artysan-code/kedalio",
+  "title": "Kedalio",
+  "description": "Self-hosted memory and task list for AI assistants: notes, tasks and projects in one encrypted DB.",
+  "version": "1.0.1",
+  "repository": {
+    "url": "https://github.com/artysan-code/kedalio",
+    "source": "github"
+  },
+  "websiteUrl": "https://kedalio.com",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/artysan-code/kedalio-core:1.0.1",
+      "runtimeHint": "docker",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeArguments": [
+        {
+          "type": "positional",
+          "value": "-i"
+        },
+        {
+          "type": "positional",
+          "value": "--rm"
+        },
+        {
+          "type": "named",
+          "name": "--volume",
+          "value": "kedalio-data:/data",
+          "description": "The Docker volume that keeps the database and its key between runs."
+        }
+      ],
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "stdio"
+        }
+      ]
+    }
+  ]
+}

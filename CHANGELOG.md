@@ -5,6 +5,11 @@ user-visible change adds a line under Unreleased as it lands; `scripts/release.t
 
 ## Unreleased
 
+### Added
+
+- Kedalio is listed on the MCP registry as `io.github.artysan-code/kedalio` (`server.json`): its container image runs
+  `kedalio-core stdio` with the data in a Docker volume, and each release publishes its version there.
+
 ### Changed
 
 - The container image is built with Go 1.27.4 on Alpine 3.24.4.

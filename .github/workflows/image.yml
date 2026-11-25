@@ -139,3 +139,31 @@ jobs:
           subject-name: ${{ steps.tags.outputs.image }}
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
+
+      # The MCP registry (registry.modelcontextprotocol.io) lists the server as io.github.<owner>/kedalio from server.json,
+      # with this version and image tag. Every pushed image validates it, so a release does not find out first; a
+      # release (not a prerelease) then publishes it, signed in with the job's OIDC token. The registry reads the image's
+      # io.modelcontextprotocol.server.name label anonymously: the package must be public.
+      - uses: sigstore/cosign-installer@881c63bd87e38389154debd8331404ce7ca8a3ab # v4.1.4
+        if: ${{ steps.tags.outputs.push == 'true' }}
+      - name: MCP registry
+        if: ${{ steps.tags.outputs.push == 'true' }}
+        env:
+          MCP_PUBLISHER_VERSION: v1.8.16
+          IMAGE: ${{ steps.tags.outputs.image }}
+          VERSION: ${{ steps.tags.outputs.version }}
+        run: |
+          base="https://github.com/modelcontextprotocol/registry/releases/download/$MCP_PUBLISHER_VERSION"
+          curl -fsSLO "$base/mcp-publisher_linux_amd64.tar.gz"
+          curl -fsSLO "$base/mcp-publisher_linux_amd64.tar.gz.sigstore.json"
+          cosign verify-blob mcp-publisher_linux_amd64.tar.gz \
+            --bundle mcp-publisher_linux_amd64.tar.gz.sigstore.json \
+            --certificate-identity "https://github.com/modelcontextprotocol/registry/.github/workflows/release.yml@refs/tags/$MCP_PUBLISHER_VERSION" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+          tar xzf mcp-publisher_linux_amd64.tar.gz mcp-publisher
+          jq --arg v "$VERSION" --arg i "$IMAGE:$VERSION" '.version = $v | .packages[0].identifier = $i' server.json >server.release.json
+          ./mcp-publisher validate server.release.json
+          if [[ "$GITHUB_REF" == refs/tags/v* && "$VERSION" != *-* ]]; then
+            ./mcp-publisher login github-oidc
+            ./mcp-publisher publish server.release.json
+          fi

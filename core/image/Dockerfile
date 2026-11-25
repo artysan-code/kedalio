@@ -22,6 +22,8 @@ RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -tags timetzdata -ldflags="-s -w 
   && GOOS=$TARGETOS GOARCH=$TARGETARCH go build -tags timetzdata -ldflags="-s -w" -o /out/kedalio-restore ./core/cmd/kedalio-restore
 
 FROM alpine:3.24.4@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf
+# the MCP registry reads this label to check that the image belongs to the server named in server.json
+LABEL io.modelcontextprotocol.server.name="io.github.artysan-code/kedalio"
 # CA certificates: the core calls the offsite backup store over TLS.
 RUN apk add --no-cache ca-certificates \
   && adduser -D -u 10001 -h /data kedalio \
