@@ -5,6 +5,8 @@ user-visible change adds a line under Unreleased as it lands; `scripts/release.t
 
 ## Unreleased
 
+## 1.0.1 (2026-11-25)
+
 ### Added
 
 - Release archives and the container image carry a SLSA build provenance attestation; check one with

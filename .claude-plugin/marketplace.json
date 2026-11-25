@@ -6,7 +6,7 @@
     {
       "name": "kedalio-local",
       "description": "Kedalio on this computer: memory and tasks over stdio, no token and no port.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "./plugin",
       "strict": false,
       "skills": "./skills",
@@ -34,7 +34,7 @@
     {
       "name": "kedalio-server",
       "description": "Kedalio on a server: clients connect by approving a short code (OAuth), a passkey is optional, no token on this computer.",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "./plugin",
       "strict": false,
       "skills": "./skills",
