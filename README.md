@@ -1,7 +1,8 @@
 # Kedalio
 
-Kedalio is a personal memory and task list for your AI assistants. You host it yourself: one Go program and one
-encrypted SQLite database, behind one MCP connector. Claude, Codex, ChatGPT and any other MCP client read and write the
+Kedalio is a self-hosted memory and task list for your AI assistants, over MCP. Start at
+[kedalio.com](https://kedalio.com). You host it yourself: one Go program and one encrypted SQLite database, behind one
+MCP connector. Claude, Codex, ChatGPT and any other MCP client read and write the
 same notes, tasks and projects. You connect each client by approving a short code; a passkey is optional.
 
 It serves one owner (you) and the clients you use. It has no team features and there is no hosted service: you run it on

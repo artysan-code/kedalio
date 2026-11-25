@@ -1,0 +1,26 @@
+name: Request
+description: Something Kedalio should do, or do differently.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Kedalio serves one owner and stays small (docs/adr/0006-public-release.md): a request may be declined if it
+        does not fit, and a larger change is best discussed here before a pull request.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you would like
+      description: The behaviour you have in mind; a tool, an option, a change to an existing one.
+  - type: textarea
+    id: else
+    attributes:
+      label: What you tried instead
+      description: Workarounds or other tools, if any.

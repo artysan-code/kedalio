@@ -1,0 +1,54 @@
+name: Bug
+description: Kedalio does something wrong or fails.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A security problem goes to a private report, not here: see SECURITY.md.
+        Leave out tokens, recovery codes, hostnames and anything from your memory or tasks you would not publish.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce
+      description: The smallest steps that show it, from a fresh install if you can.
+      placeholder: |
+        1. kedalio-core stdio -data /tmp/k
+        2. ...
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The output of `kedalio-core -version`.
+      placeholder: 1.0.1
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: How it runs
+      options:
+        - On this computer (stdio)
+        - On a server (Docker / compose)
+        - On a server (binary)
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Client
+      description: The MCP client and its version, if it matters.
+      placeholder: Claude Code 2.x, Codex, ChatGPT, ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The relevant lines of the core's log, with secrets removed.
+      render: text

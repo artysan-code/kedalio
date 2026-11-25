@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/artysan-code/kedalio/security/advisories/new
+    about: Report it privately, never in a public issue (see SECURITY.md).
+  - name: Install guide
+    url: https://kedalio.com/install.md
+    about: How to install Kedalio and connect a client, step by step.
