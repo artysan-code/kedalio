@@ -119,10 +119,8 @@ jobs:
           pattern: dist-*
           path: dist
           merge-multiple: true
-      - name: release
+      - name: assets
         env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
           TAG: ${{ github.ref_name }}
         run: |
           version="${TAG#v}"
@@ -136,6 +134,18 @@ jobs:
           # the one-line installer, read by people before they run it, so the release carries the exact file
           cp get.sh dist/get.sh
           (cd dist && sha256sum -- * >SHA256SUMS)
+      # The attestation comes before the release: if it fails, no public release exists. It covers every file listed in
+      # SHA256SUMS (which does not list itself).
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-checksums: dist/SHA256SUMS
+      - name: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
           # the CHANGELOG's section of this version: from its «## <version>» heading (a «[» before it is allowed) to the next «## »
           awk -v v="$version" '
             /^## / {
@@ -160,7 +170,3 @@ jobs:
             exit 1
           fi
           gh release create "$TAG" dist/* "${flags[@]}"
-      # SHA256SUMS lists every asset, so one attestation covers them all
-      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-checksums: dist/SHA256SUMS
