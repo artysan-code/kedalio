@@ -5,6 +5,10 @@ user-visible change adds a line under Unreleased as it lands; `scripts/release.t
 
 ## Unreleased
 
+### Changed
+
+- The container image is built with Go 1.27.4 on Alpine 3.24.4.
+
 ## 1.0.1 (2026-11-25)
 
 ### Added
