@@ -95,6 +95,7 @@ install -m 0755 kedalio-*/kedalio-core kedalio-*/kedalio-restore ~/.local/bin/
 ~/.local/bin/kedalio-core -version
 ```
 
+To also check where it was built (needs the GitHub CLI): `gh attestation verify "kedalio-$OS-$ARCH.tar.gz" --repo artysan-code/kedalio`.
 The checksum line must print `OK` for the archive. If `~/.local/bin` is not on `PATH`, say so; the configuration below
 uses the full path, so it works either way.
 

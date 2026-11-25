@@ -27,6 +27,9 @@ both, together with the Go modules.
   plus `compose.yaml` with its image pinned to the tag, `install.md` (`docs/install.md`), `get.sh` (the one-line
   installer) and `SHA256SUMS`.
   A tag fails when `.claude-plugin/marketplace.json` exists and a version in it differs from the tag.
+  Every asset is attested (SLSA build provenance, `actions/attest-build-provenance` on `SHA256SUMS`), and so is the image
+  by digest (pushed to ghcr.io): `gh attestation verify <file> --repo artysan-code/kedalio`, or
+  `gh attestation verify oci://ghcr.io/artysan-code/kedalio-core:<tag> --repo artysan-code/kedalio`.
   `kedalio-recall-eval` is a development tool and is not shipped. The notes are the tag's section of `CHANGELOG.md`
   (the heading starts with the version, `## 1.2.0 …` or `## [1.2.0] …`). A tag without one fails the release; only a
   prerelease (a `-` in the tag) falls back to GitHub's generated notes. To release: `deno run --allow-read --allow-write

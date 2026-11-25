@@ -5,6 +5,11 @@ user-visible change adds a line under Unreleased as it lands; `scripts/release.t
 
 ## Unreleased
 
+### Added
+
+- Release archives and the container image carry a SLSA build provenance attestation; check one with
+  `gh attestation verify <file> --repo artysan-code/kedalio`.
+
 ### Changed
 
 - `get.sh --server` now warns that the client-address header is off and says how to turn it on behind a reverse
