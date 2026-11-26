@@ -255,6 +255,13 @@ func (o Options) open(ctx context.Context, raw []byte, code string) (_ *Instance
 		cfg.Embedder = query
 		later = append(later, func() { EmbedInBackground(ctx, index, store, background) })
 	}
+	if !o.Stdio {
+		// named tokens need only their table, not the public URL the rest of the identity is built on
+		if err := identity.Migrate(ctx, sqldb); err != nil {
+			return nil, err
+		}
+		cfg.Named = identity.NewTokens(sqldb).Lookup
+	}
 	var idn *identity.Identity
 	if o.PublicURL != "" && !o.Stdio {
 		if idn, err = identity.New(ctx, sqldb, identity.Options{PublicURL: o.PublicURL, ClientIPHeader: o.ClientIPHeader, TrustedProxies: o.TrustedProxies, Name: o.Owner, Language: language}); err != nil {

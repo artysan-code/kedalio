@@ -70,6 +70,12 @@ struct as the upkeep's (`core/mcp/policy.go`):
 - the nightly upkeep's inbox worklist skips those entries and `inbox_placed` refuses them to the upkeep token: they wait
   for the owner, and `session_start` counts them apart (`inbox.from_cloud`).
 
+A headless agent that cannot do OAuth gets a named token instead: `kedalio-core tokens create <name> -policy cloud`
+makes a `kdl_` bearer token, shown once, kept as its hash (`core/identity/tokens.go`, table `named_tokens`) and
+revocable by name. It works with or without `-public-url`, takes the same cloud policy (`tokenPolicies` in
+`core/mcp/policy.go`) and writes as author `token:<name>`, which is never `upkeep`. A `kdl_` bearer is judged by that
+store only, never by the OAuth checks.
+
 There is no cap on how many cloud clients register: adding the connector takes the owner's approval of its code.
 
 ## Secrets
@@ -84,7 +90,7 @@ what to do with them is the owner's call.
 ## Signing in
 
 A client reaches `/mcp` with a bearer token: the static `KEDALIO_CORE_TOKEN`, the upkeep job's `KEDALIO_UPKEEP_TOKEN`
-(see Upkeep), or an access token the core issued through OAuth. With `-public-url` set the core is also an OAuth
+(see Upkeep), a named `kdl_` token an operator made (see Cloud clients), or an access token the core issued through OAuth. With `-public-url` set the core is also an OAuth
 authorization server: a client registers itself, sends the owner to `/oauth/authorize`, the page shows a short
 code, the owner approves it with `kedalio-core approve` (or, for a local client, the `clients_approve` tool), and the
 client trades its code at `/oauth/token`. A browser with a passkey session sees the consent page instead and agrees in one

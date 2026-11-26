@@ -29,12 +29,31 @@ var (
 		write: (*Server).cloudWrite, task: func(_ *Server, _ context.Context, q protocol.TasksSave) error { return cloudTask(q) }}
 )
 
+// tokenPolicies are the policies a named token (Config.Named) may be bound to, by the name the operator gives on the
+// command line. The only place that maps a name to a policy.
+// The short tool list (server.go) and remember-into-inbox (remember.go, memory.go) follow isCloud, not policyOf, so a
+// future non-cloud policy must decide those too.
+var tokenPolicies = map[string]*policy{"cloud": cloudPolicy}
+
+// KnownPolicy is whether name is a policy a named token can be bound to.
+func KnownPolicy(name string) bool { return tokenPolicies[name] != nil }
+
+const (
+	// namedPrefix starts a named token's text; namedAuthorPrefix starts its author
+	namedPrefix       = "kdl_"
+	namedAuthorPrefix = "token:"
+)
+
+type policyKey struct{}
+
 // policyOf is the policy of the caller behind a request, nil for the owner and the local clients. The tokens come
-// first: the upkeep token is never an OAuth token, and cloud is only ever set for an OAuth one.
+// first: the upkeep token is never an OAuth token, and a named token carries its own policy, which may be cloud too.
 func (s *Server) policyOf(ctx context.Context) *policy {
 	switch by := s.by(ctx); {
 	case by == upkeepAuthor:
 		return upkeepPolicy
+	case ctx.Value(policyKey{}) != nil:
+		return ctx.Value(policyKey{}).(*policy)
 	case isCloud(ctx):
 		return cloudPolicy
 	}

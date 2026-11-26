@@ -39,7 +39,12 @@ const cloudWhyPrefix = "cloud: "
 
 // cloudWhy is the why line of a cloud client's inbox entry: who left it, and that it is the owner's to place.
 func (s *Server) cloudWhy(ctx context.Context) string {
-	return cloudWhyPrefix + "from " + strings.TrimPrefix(s.by(ctx), "oauth:") + ", waits for the owner"
+	// a token keeps its marker: an OAuth client and a token may both be named alice
+	from := strings.TrimPrefix(s.by(ctx), "oauth:")
+	if name, ok := strings.CutPrefix(from, namedAuthorPrefix); ok {
+		from = "token " + name
+	}
+	return cloudWhyPrefix + "from " + from + ", waits for the owner"
 }
 
 // isCloudWhy is whether the text of a why line (after «why:») is a cloud client's mark.

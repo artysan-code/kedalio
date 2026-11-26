@@ -41,6 +41,7 @@ func TestMaskValuesThatLookLikeSecretsAreCoveredWhereverTheyAre(t *testing.T) {
 		"xo" + "xp-1-abcdefghijklmno",
 		"AK" + "IAIOSFODNN7EXAMPLE",
 		"gl" + "pat-abcdefghij1234567890",
+		"kdl_" + "abcdefghij1234567890-_xyz",
 		"Bearer abc.def-123",
 	} {
 		if got := MaskField("note", v); got != Hidden {

@@ -100,6 +100,23 @@ The static `KEDALIO_CORE_TOKEN` is not a client and `revoke` does not touch it: 
 Left alone, access tokens last one hour and refresh tokens 30 days, and a client with no live token for 90 days is
 forgotten.
 
+## Tokens for headless agents
+
+An agent that calls `/mcp` with `Authorization: Bearer <token>` and cannot sign in gets a named token with the cloud
+policy (the reading tools, `tasks_save`, and `memory_write` into the inbox only). It works with or without
+`-public-url`:
+
+```sh
+docker exec <container> kedalio-core tokens create alice -policy cloud
+docker exec <container> kedalio-core tokens list
+docker exec <container> kedalio-core tokens revoke alice
+```
+
+`create` prints the token once; only its hash is kept, so a lost token is revoked and replaced by one with a new name.
+Its writes are recorded as `token:alice`. `list` shows name, policy, creation, last use and revocation, never a token.
+A revoked token's next call is refused, and its name is never reused. The names `owner`, `upkeep` and `client` are
+reserved.
+
 ## Limits
 
 - Revoking is a command on the server, not a button in a page.

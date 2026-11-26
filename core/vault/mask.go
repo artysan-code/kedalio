@@ -27,7 +27,7 @@ var (
 	valueShapes = []string{
 		`\bxoxd-[\w%+/=.-]{10,}`,
 		`\beyJ[\w-]+\.[\w-]+\.[\w-]+`,
-		`\b(?:gh[pousr]_|github_pat_|sk-ant-|sk-|xox[a-z]-|AKIA|glpat-)[\w-]{10,}`,
+		`\b(?:gh[pousr]_|github_pat_|sk-ant-|sk-|xox[a-z]-|AKIA|glpat-|kdl_)[\w-]{10,}`,
 		`\bBearer\s+\S+`,
 	}
 	shapeKinds = []string{"slack cookie", "jwt", "token of a known prefix", "Bearer-header credential"}

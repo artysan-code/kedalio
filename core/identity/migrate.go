@@ -32,6 +32,10 @@ create index tokens_family on tokens(family);`,
   created integer not null, expires integer not null, state text not null default 'pending',
   decided_by text, decided integer);
 create index approvals_client on approvals(client);`,
+	// static bearer tokens of headless agents, each bound to a policy; a revoked row stays so that a name is never reused
+	// (`tokens` is the OAuth table above)
+	`create table named_tokens (
+  name text primary key, hash text not null unique, policy text not null, created text not null, used text, revoked text);`,
 }
 
 // Migrate brings the identity's tables up to date.

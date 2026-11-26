@@ -47,6 +47,10 @@ type Config struct {
 	// are recorded under, «oauth:<client>», so a revision says which connector wrote it. remote is a client registered
 	// with a redirect off this machine (claude.ai, ChatGPT): it gets the cloud policy (cloud.go).
 	Client func(ctx context.Context, token string) (name string, remote bool)
+	// Named, when set, accepts a bearer token that starts with «kdl_»: a static token an operator made for a headless
+	// agent, bound to a policy by name (tokenPolicies). It gives the token's name and policy; revoked and unknown
+	// tokens are not ok. A «kdl_» bearer is judged here only, never by Verify.
+	Named func(ctx context.Context, token string) (name, policy string, ok bool)
 	// ResourceMetadata is the address of the protected resource metadata (RFC 9728), told in the WWW-Authenticate of a
 	// 401 so that an OAuth client finds the authorization server; empty when OAuth is off.
 	ResourceMetadata string
@@ -251,7 +255,24 @@ func (s *Server) authorized(next http.Handler) http.Handler {
 		// both compares always run, so the time says nothing about which token was close
 		isOwner := subtle.ConstantTimeCompare(have[:], want[:]) == 1
 		isUpkeep := subtle.ConstantTimeCompare(have[:], upWant[:]) == 1 && hasUpkeep
-		if !ok || (!isOwner && !isUpkeep && (s.cfg.Verify == nil || !s.cfg.Verify(r.Context(), got))) {
+		var named *policy
+		var namedBy string
+		pass := isOwner || isUpkeep
+		if ok && !pass {
+			if strings.HasPrefix(got, namedPrefix) {
+				// a token of this shape is a named one or nothing: it never goes to the OAuth checks
+				if s.cfg.Named != nil {
+					if n, pol, found := s.cfg.Named(r.Context(), got); found {
+						if named = tokenPolicies[pol]; named != nil {
+							namedBy, pass = namedAuthorPrefix+n, true
+						}
+					}
+				}
+			} else {
+				pass = s.cfg.Verify != nil && s.cfg.Verify(r.Context(), got)
+			}
+		}
+		if !ok || !pass {
 			// only a wrong token counts, and a valid one always passes: behind a shared proxy address the owner must not
 			// be locked out by strangers' failures. Wrong tokens from a blocked address are told apart by the 429.
 			if ip != "" && s.cfg.AuthFailures != nil {
@@ -266,7 +287,16 @@ func (s *Server) authorized(next http.Handler) http.Handler {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
-		if isUpkeep && !isOwner {
+		if named != nil {
+			// the author is marked «token:», so no token's name can read as the upkeep (upkeepAuthor); a cloud policy is
+			// also cloud for everything that reads isCloud (the short tool list, remember, the inbox's mark)
+			ctx := context.WithValue(r.Context(), authorKey{}, namedBy)
+			ctx = context.WithValue(ctx, policyKey{}, named)
+			if named == cloudPolicy {
+				ctx = context.WithValue(ctx, cloudKey{}, true)
+			}
+			r = r.WithContext(ctx)
+		} else if isUpkeep && !isOwner {
 			r = r.WithContext(context.WithValue(r.Context(), authorKey{}, upkeepAuthor))
 		} else if s.cfg.Client != nil && !isOwner {
 			c, remote := s.cfg.Client(r.Context(), got)

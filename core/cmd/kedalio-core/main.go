@@ -98,6 +98,14 @@ func main() {
 		}
 		return
 	}
+	// `kedalio-core tokens create|list|revoke` manages the named bearer tokens of headless agents and does not start the core
+	if len(os.Args) > 1 && os.Args[1] == "tokens" {
+		if err := runTokens(context.Background(), os.Args[2:], os.Stdout); err != nil {
+			fmt.Fprintln(os.Stderr, "kedalio-core:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	// `kedalio-core passkeys list|remove` manages the owner's passkeys and does not start the core
 	if len(os.Args) > 1 && os.Args[1] == "passkeys" {
 		if err := runPasskeys(context.Background(), os.Args[2:], os.Stdout); err != nil {

@@ -5,6 +5,10 @@ user-visible change adds a line under Unreleased as it lands; `scripts/release.t
 
 ## Unreleased
 
+### Added
+
+- Named bearer tokens for headless agents: `kedalio-core tokens create <name> -policy cloud | list | revoke <name>`, limited to the cloud policy, written under their own name, revocable one by one, with or without `-public-url`.
+
 ## 1.0.2 (2026-11-25)
 
 ### Added
